@@ -1,14 +1,17 @@
 # e-catalog
 
-This template should help get you started developing with Vue 3 in Vite.
+#### This is my studing project in my basic training vue 3. This project is an online catalog of products. It has an admin part where we can create, update and delete products, categories and brands.
 
-## Recommended IDE Setup
+## In this project I used:
+### Vue 3 with composition API
+### Vue-router
+### Pinia
+### Axios
+### Vee-validate
+### Bootstrap 5
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
+#### The API for this project I was create in restdb.io
+#### Also I created a cache for items from the API using localStorage
 
 ## Project Setup
 
