@@ -1,4 +1,4 @@
-# e-catalog
+# vue3-e-catalog
 
 #### This is my studing project in my basic training vue 3. This project is an online catalog of products. It has an admin part where we can create, update and delete products, categories and brands.
 
