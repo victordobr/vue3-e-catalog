@@ -14,9 +14,7 @@ const brandStore = useBrandStore();
 brandStore.fetchBrands();
 
 const {
-  brands,
-  isLoading,
-  message,
+  store,
 } = storeToRefs(brandStore);
 
 // Modal window
@@ -36,7 +34,7 @@ onMounted(() => {
 function openModal(id) {
   if (id) {
     state.modalHeader = 'Edit brand';
-    state.brand = Object.assign({}, brandStore.brands.find((item) => item._id === id));
+    state.brand = Object.assign({}, brandStore.store.brands.find((item) => item._id === id));
   } else {
     state.modalHeader = 'Create brand';
     state.brand = {
@@ -61,7 +59,7 @@ function deleteBrand(brandId) {
 
 <template>
 <div id="page-content-wrapper" class="p-3">
-  <Alert :message="message"></Alert>
+  <Alert :message="store.message.value" :type="store.message.type"></Alert>
   <h1 class="float-start">Product list</h1>
   <button @click="openModal()" type="button" class="btn btn-outline-primary float-end">Create brand</button>
   <table class="table table-striped">
@@ -74,7 +72,7 @@ function deleteBrand(brandId) {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(brand, index) in brands">
+      <tr v-for="(brand, index) in store.brands">
         <td>{{ index + 1 }}</td>
         <td>{{ brand.name }}</td>
         <td>{{ brand.description }}</td>
@@ -85,7 +83,7 @@ function deleteBrand(brandId) {
       </tr>
     </tbody>
   </table>
-  <div v-if="isLoading" class="d-flex justify-content-center">
+  <div v-if="store.isLoading" class="d-flex justify-content-center">
     <div class="spinner-border" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>

@@ -38,6 +38,3 @@ const authStore = useAuthStore();
     </div>
   </nav>
 </template>
-
-<style scoped>
-</style>

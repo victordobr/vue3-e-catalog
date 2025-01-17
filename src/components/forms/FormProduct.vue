@@ -2,7 +2,6 @@
 import { useCategoryStore } from "@/stores/useCategoryStore.js";
 import { useProductStore } from "@/stores/useProductStore.js";
 import { useBrandStore } from "@/stores/useBrandStore.js";
-import { storeToRefs } from "pinia";
 import * as Yup from "yup";
 import { Form, Field } from 'vee-validate';
 import Alert from "@/components/Alert.vue";
@@ -17,14 +16,6 @@ const brandStore = useBrandStore();
 
 const error = ref('');
 
-const {
-  categories,
-} = storeToRefs(categoryStore)
-
-const {
-  brands
-} = storeToRefs(brandStore)
-
 const schema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
   description: Yup.string(),
@@ -36,23 +27,16 @@ const schema = Yup.object().shape({
 
 function onSubmit () {
   error.value = '';
-  if (props.product._id) {
-    productStore.updateProduct(props.product)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  } else {
-    productStore.createProduct(props.product)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  }
-}
+  const productFn = props.product._id ? productStore.updateProduct : productStore.createProduct;
 
+  productFn(props.product)
+    .then((r) => {
+      emits('modal-close');
+    })
+    .catch((e) => {
+      error.value = e.message;
+    });
+}
 </script>
 
 <template>
@@ -81,7 +65,7 @@ function onSubmit () {
   <div class="mb-3">
     <label for="product-form-category" class="form-label">Category</label>
     <Field name="category" as="select" v-model="product.categoryId" class="form-select" id="product-form-category" :class="{ 'is-invalid': errors.category }">
-      <option v-for="category in categories" :value="category._id">{{ category.name }}</option>
+      <option v-for="category in categoryStore.store.categories" :value="category._id">{{ category.name }}</option>
     </Field>
     <div class="invalid-feedback">{{ errors.category }}</div>
   </div>
@@ -89,7 +73,7 @@ function onSubmit () {
     <label for="product-form-brand" class="form-label">Brand</label>
     <Field name="brand" as="select" v-model="product.brandId" class="form-select" id="product-form-brand" :class="{ 'is-invalid': errors.brand }">
       <option value="">No brand</option>
-      <option v-for="brand in brands" :value="brand._id">{{ brand.name }}</option>
+      <option v-for="brand in brandStore.store.brands" :value="brand._id">{{ brand.name }}</option>
     </Field>
     <div class="invalid-feedback">{{ errors.brand }}</div>
   </div>
@@ -99,7 +83,3 @@ function onSubmit () {
   </button>
 </Form>
 </template>
-
-<style scoped>
-
-</style>

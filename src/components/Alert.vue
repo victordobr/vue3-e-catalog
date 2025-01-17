@@ -1,11 +1,11 @@
 <script setup>
-defineProps(['message']);
+defineProps(['message', 'type']);
 </script>
 
 <template>
 <Transition>
-  <div v-if="message.value" class="alert" :class="'alert-' + message.type" role="alert">
-    {{ message.value }}
+  <div v-if="message" class="alert" :class="'alert-' + type" role="alert">
+    {{ message }}
   </div>
 </Transition>
 </template>

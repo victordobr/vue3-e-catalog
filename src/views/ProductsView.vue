@@ -14,9 +14,7 @@ const productStore = useProductStore();
 productStore.fetchProducts();
 
 const {
-  products,
-  isLoading,
-  message,
+  store,
 } = storeToRefs(productStore);
 
 // Modal window
@@ -40,7 +38,7 @@ onMounted(() => {
 function openModal(id) {
   if (id) {
     state.modalHeader = 'Edit product';
-    state.product = Object.assign({}, productStore.products.find((item) => item._id === id));
+    state.product = Object.assign({}, productStore.store.products.find((item) => item._id === id));
   } else {
     state.modalHeader = 'Create product';
     state.product = {
@@ -69,7 +67,7 @@ function deleteProduct(productId) {
 
 <template>
 <div id="page-content-wrapper" class="p-3">
-  <Alert :message="message"></Alert>
+  <Alert :message="store.message.value" :type="store.message.type"></Alert>
   <h1 class="float-start">Product list</h1>
   <button @click="openModal()" type="button" class="btn btn-outline-primary float-end">Create product</button>
   <table class="table table-striped">
@@ -85,7 +83,7 @@ function deleteProduct(productId) {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(product, index) in products">
+      <tr v-for="(product, index) in store.products">
         <td>{{ index + 1 }}</td>
         <td>{{ product.title }}</td>
         <td>{{ product.price }}</td>
@@ -99,7 +97,7 @@ function deleteProduct(productId) {
       </tr>
     </tbody>
   </table>
-  <div v-if="isLoading" class="d-flex justify-content-center">
+  <div v-if="store.isLoading" class="d-flex justify-content-center">
     <div class="spinner-border" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>

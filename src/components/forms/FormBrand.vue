@@ -19,21 +19,15 @@ const schema = Yup.object().shape({
 
 function onSubmit () {
   error.value = '';
-  if (props.brand._id) {
-    brandStore.updateBrand(props.brand)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  } else {
-    brandStore.createBrand(props.brand)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  }
+  const brandFn = props.brand._id ? brandStore.updateBrand : brandStore.createBrand;
+
+  brandFn(props.brand)
+    .then((r) => {
+      emits('modal-close');
+    })
+    .catch((e) => {
+      error.value = e.message;
+    });
 }
 </script>
 

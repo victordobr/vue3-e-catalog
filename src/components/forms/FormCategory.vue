@@ -19,21 +19,15 @@ const schema = Yup.object().shape({
 
 function onSubmit () {
   error.value = '';
-  if (props.category._id) {
-    categoryStore.updateCategory(props.category)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  } else {
-    categoryStore.createCategory(props.category)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  }
+  const categoryFn = props.category._id ? categoryStore.updateCategory : categoryStore.createCategory;
+
+  categoryFn(props.category)
+    .then((r) => {
+      emits('modal-close');
+    })
+    .catch((e) => {
+      error.value = e.message;
+    });
 }
 </script>
 

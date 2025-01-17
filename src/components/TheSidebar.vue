@@ -10,22 +10,12 @@ const {
   categoryList
 } = storeToRefs(categoryStore)
 
-function setCategory (category) {
-  this.currentCategory = category;
-  return false;
-}
-
 const brandStore = useBrandStore();
 
 const {
   currentBrand,
   brandList
 } = storeToRefs(brandStore)
-
-function setBrand (brand) {
-  this.currentBrand = brand
-  return false
-}
 
 </script>
 
@@ -36,9 +26,9 @@ function setBrand (brand) {
     <div class="list-group list-group-flush">
       <a
         v-for="category in categoryList"
-        :class="currentCategory == category.id ? 'active' : ''"
+        :class="{ active: currentCategory == category.id }"
         class="list-group-item list-group-item-action list-group-item-light p-3"
-        @click="setCategory(category.id)"
+        @click="currentCategory = category.id"
         href="#"
       >{{ category.name }}</a>
     </div>
@@ -47,9 +37,9 @@ function setBrand (brand) {
     <div class="list-group list-group-flush">
       <a
         v-for="brand in brandList"
-        :class="currentBrand == brand.id ? 'active' : ''"
+        :class="{ active: currentBrand == brand.id }"
         class="list-group-item list-group-item-action list-group-item-light p-3"
-        @click="setBrand(brand.id)"
+        @click="currentBrand = brand.id"
         href="#"
       >{{ brand.name }}</a>
     </div>

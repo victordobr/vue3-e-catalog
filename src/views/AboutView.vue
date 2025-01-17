@@ -1,7 +1,3 @@
-<script setup>
-
-</script>
-
 <template>
 <div id="page-content-wrapper" class="p-3">
   <h1 class="text-center">Project vue3 e-catalog</h1>
@@ -26,7 +22,3 @@
   <p class="fs-4">Also I created a cache for items from the API using localStorage</p>
 </div>
 </template>
-
-<style>
-
-</style>

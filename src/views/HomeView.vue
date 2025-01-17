@@ -17,16 +17,14 @@ const brandStore = useBrandStore();
 productStore.fetchProducts();
 
 const {
-  products,
-  isLoading,
-  message,
+  store,
 } = storeToRefs(productStore)
 
 const searchValue = ref(null);
 const sortValue = ref(1); // Default value "Price: Low to High"
 
 const productList = computed(() => {
-  let products = productStore.products;
+  let products = productStore.store.products;
   // Sorting products by price
   products = products.sort(
     (a, b) => {
@@ -66,7 +64,7 @@ onMounted(() => {
 })
 
 function openModal(id) {
-  let prod = productStore.products.find((product) => product._id === id);
+  let prod = productStore.store.products.find((product) => product._id === id);
   state.modalHeader = prod.title;
   state.modalContent = prod.description;
   state.modal.show();
@@ -82,7 +80,7 @@ function closeModal() {
   <div class="d-flex" id="wrapper">
     <TheSidebar></TheSidebar>
     <div id="page-content-wrapper" class="p-3">
-      <Alert :message="message"></Alert>
+      <Alert :message="store.message.value" :type="store.message.type"></Alert>
       <div class="row g-2 mb-3">
         <div class="col-9">
           <input v-model="searchValue" type="text" class="form-control mr-3" placeholder="Search by product title">
@@ -94,7 +92,7 @@ function closeModal() {
           </select>
         </div>
       </div>
-      <div v-if="isLoading" class="d-flex justify-content-center">
+      <div v-if="store.isLoading" class="d-flex justify-content-center">
         <div class="spinner-border" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>

@@ -44,14 +44,14 @@ export default router
 
 router.beforeEach(async (to) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['/login', '/', '/about'];
-  const authRequired = !publicPages.includes(to.path);
+  const publicPages = ['login', 'home', 'about'];
+  const authRequired = !publicPages.includes(to.name);
   const auth = useAuthStore();
 
-  if (to.name == 'login' && auth.user) return '/';
+  if (to.name == 'login' && auth.user)
+    router.push('/products');
 
-  if (authRequired && !auth.user) {
-    auth.returnUrl = to.fullPath;
-    return '/login';
-  }
+  if (authRequired && !auth.user)
+    router.push('/login');
+
 });

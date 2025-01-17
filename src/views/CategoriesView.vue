@@ -14,9 +14,7 @@ const categoryStore = useCategoryStore();
 categoryStore.fetchCategories();
 
 const {
-  categories,
-  isLoading,
-  message,
+  store,
 } = storeToRefs(categoryStore);
 
 // Modal window
@@ -36,7 +34,7 @@ onMounted(() => {
 function openModal(id) {
   if (id) {
     state.modalHeader = 'Edit category';
-    state.category = Object.assign({}, categoryStore.categories.find((item) => item._id === id));
+    state.category = Object.assign({}, categoryStore.store.categories.find((item) => item._id === id));
   } else {
     state.modalHeader = 'Create category';
     state.category = {
@@ -61,7 +59,7 @@ function deleteCategory(categoryId) {
 
 <template>
 <div id="page-content-wrapper" class="p-3">
-  <Alert :message="message"></Alert>
+  <Alert :message="store.message.value" :type="store.message.type"></Alert>
   <h1 class="float-start">Product list</h1>
   <button @click="openModal()" type="button" class="btn btn-outline-primary float-end">Create category</button>
   <table class="table table-striped">
@@ -74,7 +72,7 @@ function deleteCategory(categoryId) {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(category, index) in categories">
+      <tr v-for="(category, index) in store.categories">
         <td>{{ index + 1 }}</td>
         <td>{{ category.name }}</td>
         <td>{{ category.description }}</td>
@@ -85,7 +83,7 @@ function deleteCategory(categoryId) {
       </tr>
     </tbody>
   </table>
-  <div v-if="isLoading" class="d-flex justify-content-center">
+  <div v-if="store.isLoading" class="d-flex justify-content-center">
     <div class="spinner-border" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
