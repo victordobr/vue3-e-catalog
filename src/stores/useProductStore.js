@@ -3,12 +3,11 @@ import { defineStore } from 'pinia'
 import axios from 'axios';
 import { useCategoryStore } from "@/stores/useCategoryStore.js";
 import { useBrandStore } from "@/stores/useBrandStore.js";
-import { config } from '@/config.js';
 
 axios.defaults.headers['content-type'] = 'application/json';
-axios.defaults.headers['x-apikey'] = config.apiKey;
+axios.defaults.headers['x-apikey'] = import.meta.env.VITE_API_KEY;
 
-const BASE_URL = config.baseUrl + 'products';
+const BASE_URL = import.meta.env.VITE_API_URL + 'products';
 
 export const useProductStore = defineStore('products', () => {
     const store = reactive({
@@ -37,7 +36,7 @@ export const useProductStore = defineStore('products', () => {
                     });
                     // Caching products using localStorage
                     localStorage.setItem("products", JSON.stringify(store.products));
-                    localStorage.setItem("expiryTime", JSON.stringify((new Date()).getTime() + config.cacheTime));
+                    localStorage.setItem("expiryTime", JSON.stringify((new Date()).getTime() + Number(import.meta.env.VITE_CACHE_TIME)));
                 }
             } catch (error) {
                 store.isLoading = false;
@@ -76,7 +75,7 @@ export const useProductStore = defineStore('products', () => {
                     'value': null,
                     'type': null,
                 };
-            }, config.messageTimeout);
+            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
         }
     }
 
@@ -93,7 +92,7 @@ export const useProductStore = defineStore('products', () => {
                     'value': null,
                     'type': null,
                 };
-            }, config.messageTimeout);
+            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
         }
     }
 
@@ -110,7 +109,7 @@ export const useProductStore = defineStore('products', () => {
                     'value': null,
                     'type': null,
                 };
-            }, config.messageTimeout);
+            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
         }
     }
 

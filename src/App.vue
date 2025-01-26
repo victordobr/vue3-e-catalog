@@ -1,7 +1,7 @@
 <script setup>
 import TheHeader from "@/components/TheHeader.vue";
-import {useCategoryStore} from "@/stores/useCategoryStore.js";
-import {useBrandStore} from "@/stores/useBrandStore.js";
+import { useCategoryStore } from "@/stores/useCategoryStore.js";
+import { useBrandStore } from "@/stores/useBrandStore.js";
 
 const categoryStore = useCategoryStore();
 categoryStore.fetchCategories();
