@@ -14,14 +14,17 @@ const { errors, handleSubmit, defineField, resetForm } = useForm({
   })
 });
 
-const [name, nameAttrs] = defineField('name');
-const [description, descriptionAttrs] = defineField('description');
+const [name] = defineField('name');
+const [description] = defineField('description');
 
 watch(
-  () => props.category,
-  () => {
-    resetForm({ values: props.category });
-  }
+    () => props.category,
+    (newCategory) => {
+      if (newCategory) {
+        resetForm({ values: newCategory });
+      }
+    },
+    { deep: true }
 );
 
 const onSubmit = handleSubmit(values => {
@@ -39,7 +42,6 @@ const onSubmit = handleSubmit(values => {
       <label for="category-form-title" class="form-label">Name</label>
       <Field name="name"
              v-model="name"
-             v-bind="nameAttrs"
              type="text"
              class="form-control"
              id="category-form-title"
@@ -52,7 +54,6 @@ const onSubmit = handleSubmit(values => {
       <Field as="textarea"
              name="description"
              v-model="description"
-             v-bind="descriptionAttrs"
              class="form-control"
              id="category-form-description"
              rows="4"

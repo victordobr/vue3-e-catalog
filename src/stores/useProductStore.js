@@ -19,99 +19,91 @@ export const useProductStore = defineStore('products', () => {
         }
     });
 
-    async function fetchProducts () {
-        if (localStorage.products && localStorage.expiryTime > (new Date()).getTime()) {
-            store.products = JSON.parse(localStorage.products);
+    function setMessage(value, type, timeout = import.meta.env.VITE_MESSAGE_TIMEOUT) {
+        store.message = { value, type };
+        if (timeout) {
+            setTimeout(() => {
+                store.message = { value: null, type: null };
+            }, timeout);
+        }
+    }
+
+    async function handleRequest(method, url, data = null) {
+        try {
+            const config = { method, url };
+            if (data !== null) config.data = data; // data = null if we use method delete
+
+            const response = await axios(config);
+            return response.data;
+        } catch (error) {
+            setMessage(error.message, 'danger');
+            console.error(error);
+            throw error;
+        }
+    }
+
+    async function fetchProducts() {
+        if (localStorage.getItem("products") && Number(localStorage.getItem("expiryTime")) > Date.now()) {
+            store.products = JSON.parse(localStorage.getItem("products"));
         } else {
+            localStorage.removeItem("products");
+            localStorage.removeItem("expiryTime");
+
             try {
                 store.products = [];
                 store.isLoading = true;
-                const response = await axios.get(BASE_URL + '?sort=_id');
-                if (response.status === 200) {
-                    store.products = response.data;
-                    // Setting category id and brand id to the product object
-                    store.products.forEach((item) => {
-                        item.categoryId = item.category.length ? item.category[0]._id : null;
-                        item.brandId = item.brand.length ? item.brand[0]._id : null;
-                    });
-                    // Caching products using localStorage
-                    localStorage.setItem("products", JSON.stringify(store.products));
-                    localStorage.setItem("expiryTime", JSON.stringify((new Date()).getTime() + Number(import.meta.env.VITE_CACHE_TIME)));
-                }
-            } catch (error) {
-                store.isLoading = false;
-                store.message = {
-                    'value': error.message,
-                    'type': 'danger',
-                };
+                const data = await handleRequest('get', BASE_URL + '?sort=_id');
+                store.products = data;
+                // Setting category id and brand id to the product object
+                store.products.forEach((item) => {
+                    item.categoryId = item.category.length ? item.category[0]._id : null;
+                    item.brandId = item.brand.length ? item.brand[0]._id : null;
+                });
+                // Caching products using localStorage
+                localStorage.setItem("products", JSON.stringify(data));
+                localStorage.setItem("expiryTime", Date.now() + Number(import.meta.env.VITE_CACHE_TIME));
             } finally {
                 store.isLoading = false;
             }
         }
     }
-    
-    function beforeSaveProduct (product) {
-        let prod = Object.assign({}, product);
 
+    function beforeSaveProduct(product) {
         const categoryStore = useCategoryStore();
-        prod.category = categoryStore.store.categories.find((item) => item._id == prod.categoryId);
-
         const brandStore = useBrandStore();
-        prod.brand = (prod.brandId) ? brandStore.store.brands.find((item) => item._id == prod.brandId) : [];
 
-        return prod;
+        return {
+            ...product,
+            category: categoryStore.store.categories.find(item => item._id === product.categoryId) || null,
+            brand: product.brandId ? brandStore.store.brands.find(item => item._id === product.brandId) : []
+        };
     }
 
-    async function createProduct (product) {
-        const response = await axios.post(BASE_URL, JSON.stringify(beforeSaveProduct(product)));
-        if (response.status === 201) {
-            store.products.push(response.data);
-            store.message = {
-                'value': 'The product has been successfully created!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                store.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
-        }
+    async function createProduct(product) {
+        const data = await handleRequest('post', BASE_URL, JSON.stringify(beforeSaveProduct(product)));
+        store.products.push(data);
+        setMessage('The product has been successfully created!', 'success');
     }
 
-    async function updateProduct (product) {
-        const response = await axios.put(BASE_URL + "/" + product._id, JSON.stringify(beforeSaveProduct(product)));
-        if (response.status === 200) {
-            store.products[store.products.findIndex((item) => item._id === product._id)] = response.data;
-            store.message = {
-                'value': 'The product has been successfully updated!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                store.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
-        }
+    async function updateProduct(product) {
+        const data = await handleRequest('put', `${BASE_URL}/${product._id}`, JSON.stringify(beforeSaveProduct(product)));
+        const index = store.products.findIndex(item => item._id === product._id);
+        if (index !== -1) store.products[index] = data;
+        setMessage('The product has been successfully updated!', 'success');
     }
 
-    async function deleteProduct (productId) {
-        const response = await axios.delete(BASE_URL + "/" + productId);
-        if (response.status === 200) {
-            store.products.splice(store.products.findIndex((item) => item._id === productId), 1);
-            store.message = {
-                'value': 'The product has been successfully deleted!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                store.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
-        }
+    async function deleteProduct(productId) {
+        await handleRequest('delete', `${BASE_URL}/${productId}`);
+        const index = store.products.findIndex(item => item._id === productId);
+        if (index !== -1) store.products.splice(index, 1);
+        setMessage('The product has been successfully deleted!', 'success');
     }
 
-    return { store, fetchProducts, createProduct, updateProduct, deleteProduct }
+    return {
+        store,
+        fetchProducts,
+        createProduct,
+        updateProduct,
+        deleteProduct
+    }
 })

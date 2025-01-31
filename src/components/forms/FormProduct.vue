@@ -120,7 +120,7 @@ const onSubmit = handleSubmit(values => {
       </Field>
       <div class="invalid-feedback">{{ errors.brandId }}</div>
     </div>
-    <button class="btn btn-success">
+    <button class="btn btn-success" :disabled="!(title && image && price && categoryId)">
       Save
     </button>
   </Form>

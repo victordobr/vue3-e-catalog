@@ -3,11 +3,11 @@ defineProps(['message', 'type']);
 </script>
 
 <template>
-<Transition>
-  <div v-if="message" class="alert" :class="'alert-' + type" role="alert">
-    {{ message }}
-  </div>
-</Transition>
+  <Transition>
+    <div v-if="message" class="alert" :class="'alert-' + type" role="alert">
+      {{ message }}
+    </div>
+  </Transition>
 </template>
 
 <style>

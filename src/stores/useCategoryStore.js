@@ -32,11 +32,6 @@ export const useCategoryStore = defineStore('categories', () => {
         return list;
     });
 
-    const filteredCategories = computed(() => {
-        if (currentCategory.value === 'all') return store.categories;
-        return store.categories.filter(category => category._id === currentCategory.value);
-    });
-
     function setMessage(value, type, timeout = import.meta.env.VITE_MESSAGE_TIMEOUT) {
         store.message = { value, type };
         if (timeout) {
@@ -104,7 +99,6 @@ export const useCategoryStore = defineStore('categories', () => {
         store,
         currentCategory,
         categoryList,
-        filteredCategories,
         fetchCategories,
         createCategory,
         updateCategory,

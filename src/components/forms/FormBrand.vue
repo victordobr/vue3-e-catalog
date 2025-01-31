@@ -1,6 +1,5 @@
 <script setup>
 import { useBrandStore } from "@/stores/useBrandStore.js";
-import * as Yup from "yup";
 import { Form, Field, useForm } from 'vee-validate';
 import { watch } from "vue";
 import * as yup from "yup";
@@ -10,19 +9,22 @@ const emits = defineEmits(['modal-close']);
 
 const { errors, handleSubmit, defineField, resetForm } = useForm({
   validationSchema: yup.object({
-    name: Yup.string().required('Name is required'),
-    description: Yup.string(),
+    name: yup.string().required('Name is required'),
+    description: yup.string(),
   })
 });
 
-const [name, nameAttrs] = defineField('name');
-const [description, descriptionAttrs] = defineField('description');
+const [name] = defineField('name');
+const [description] = defineField('description');
 
 watch(
     () => props.brand,
-    () => {
-      resetForm({ values: props.brand });
-    }
+    (newBrand) => {
+      if (newBrand) {
+        resetForm({ values: newBrand });
+      }
+    },
+    { deep: true }
 );
 
 const onSubmit = handleSubmit(values => {
@@ -41,7 +43,6 @@ const onSubmit = handleSubmit(values => {
     <label for="brand-form-title" class="form-label">Name</label>
     <Field name="name"
            v-model="name"
-           v-bind="nameAttrs"
            type="text"
            class="form-control"
            id="brand-form-title"
@@ -54,7 +55,6 @@ const onSubmit = handleSubmit(values => {
     <Field as="textarea"
            name="description"
            v-model="description"
-           v-bind="descriptionAttrs"
            class="form-control"
            id="brand-form-description"
            rows="4"
