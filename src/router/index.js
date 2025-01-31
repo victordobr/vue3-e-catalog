@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
-import LoginView from '@/views/LoginView.vue'
 import { useAuthStore } from "@/stores/useAuthStore.js";
 
 const router = createRouter({
@@ -11,47 +10,63 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+      meta: {
+        auth: false
+      },
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView,
+      component: () => import('@/views/LoginView.vue'),
+      meta: {
+        auth: false
+      },
     },
     {
       path: '/products',
       name: 'products',
       component: () => import('@/views/ProductsView.vue'),
+      meta: {
+        auth: true
+      },
     },
     {
       path: '/categories',
       name: 'categories',
       component: () => import('@/views/CategoriesView.vue'),
+      meta: {
+        auth: true
+      },
     },
     {
       path: '/brands',
       name: 'brands',
       component: () => import('@/views/BrandsView.vue'),
+      meta: {
+        auth: true
+      },
     },
     {
       path: '/about',
       name: 'about',
       component: () => import('@/views/AboutView.vue'),
+      meta: {
+        auth: false
+      },
     },
   ],
 })
 
 export default router
 
-router.beforeEach(async (to) => {
-  // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['login', 'home', 'about'];
-  const authRequired = !publicPages.includes(to.name);
-  const auth = useAuthStore();
+router.beforeEach((to) => {
+  const { user } = useAuthStore();
+  const authRequired = to.meta.auth;
 
-  if (to.name == 'login' && auth.user)
+  if (to.name === "login" && user)
     router.push('/products');
 
-  if (authRequired && !auth.user)
+  if (authRequired && !user)
     router.push('/login');
 
 });

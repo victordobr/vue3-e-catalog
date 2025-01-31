@@ -1,5 +1,5 @@
-import { reactive, ref } from 'vue'
-import { defineStore } from 'pinia'
+import { reactive, ref } from 'vue';
+import { defineStore } from 'pinia';
 import axios from 'axios';
 import { computed } from "@vue/runtime-core";
 
@@ -32,82 +32,82 @@ export const useCategoryStore = defineStore('categories', () => {
         return list;
     });
 
-    async function fetchCategories () {
-        if (localStorage.categories && localStorage.expiryTime > (new Date()).getTime()) {
-            store.categories = JSON.parse(localStorage.categories)
+    const filteredCategories = computed(() => {
+        if (currentCategory.value === 'all') return store.categories;
+        return store.categories.filter(category => category._id === currentCategory.value);
+    });
+
+    function setMessage(value, type, timeout = import.meta.env.VITE_MESSAGE_TIMEOUT) {
+        store.message = { value, type };
+        if (timeout) {
+            setTimeout(() => {
+                store.message = { value: null, type: null };
+            }, timeout);
+        }
+    }
+
+    async function handleRequest(method, url, data = null) {
+        try {
+            const config = { method, url };
+            if (data !== null) config.data = data; // data = null if we use method delete
+
+            const response = await axios(config);
+            return response.data;
+        } catch (error) {
+            setMessage(error.message, 'danger');
+            console.error(error);
+            throw error;
+        }
+    }
+
+    async function fetchCategories() {
+        if (localStorage.getItem("categories") && Number(localStorage.getItem("expiryTime")) > Date.now()) {
+            store.categories = JSON.parse(localStorage.getItem("categories"));
         } else {
+            localStorage.removeItem("categories");
+            localStorage.removeItem("expiryTime");
+
             try {
                 store.categories = [];
                 store.isLoading = true;
-                const response = await axios.get(BASE_URL + '?sort=_id');
-                if (response.status === 200) {
-                    store.categories = response.data;
-                    // Caching categories using localStorage
-                    localStorage.setItem("categories", JSON.stringify(store.categories));
-                    localStorage.setItem("expiryTime", JSON.stringify((new Date()).getTime() + Number(import.meta.env.VITE_CACHE_TIME)));
-                }
-            } catch (error) {
-                store.isLoading = false;
-                store.message = {
-                    'value': error.message,
-                    'type': 'danger',
-                };
+                const data = await handleRequest('get', BASE_URL + '?sort=_id');
+                store.categories = data;
+                localStorage.setItem("categories", JSON.stringify(data));
+                localStorage.setItem("expiryTime", Date.now() + Number(import.meta.env.VITE_CACHE_TIME));
             } finally {
                 store.isLoading = false;
             }
         }
     }
 
-    async function createCategory (category) {
-        const response = await axios.post(BASE_URL, JSON.stringify(category));
-        if (response.status === 201) {
-            store.categories.push(response.data);
-            store.message = {
-                'value': 'The category has been successfully created!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                store.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
-        }
+    async function createCategory(category) {
+        const data = await handleRequest('post', BASE_URL, JSON.stringify(category));
+        store.categories.push(data);
+        setMessage('The category has been successfully created!', 'success');
     }
 
-    async function updateCategory (category) {
-        const response = await axios.put(BASE_URL + "/" + category._id, JSON.stringify(category));
-        if (response.status === 200) {
-            store.categories[store.categories.findIndex((item) => item._id === category._id)] = response.data;
-            store.message = {
-                'value': 'The category has been successfully updated!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                store.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
-        }
+    async function updateCategory(category) {
+        const data = await handleRequest('put', `${BASE_URL}/${category._id}`, JSON.stringify(category));
+        const index = store.categories.findIndex(item => item._id === category._id);
+        if (index !== -1) store.categories[index] = data;
+        setMessage('The category has been successfully updated!', 'success');
     }
 
-    async function deleteCategory (categoryId) {
-        const response = await axios.delete(BASE_URL + "/" + categoryId);
-        if (response.status === 200) {
-            store.categories.splice(store.categories.findIndex((item) => item._id === categoryId), 1);
-            store.message = {
-                'value': 'The category has been successfully deleted!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                store.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, import.meta.env.VITE_MESSAGE_TIMEOUT);
-        }
+    async function deleteCategory(categoryId) {
+        await handleRequest('delete', `${BASE_URL}/${categoryId}`);
+        const index = store.categories.findIndex(item => item._id === categoryId);
+        if (index !== -1) store.categories.splice(index, 1);
+        setMessage('The category has been successfully deleted!', 'success');
     }
 
-    return { store, currentCategory, categoryList, fetchCategories, createCategory, updateCategory, deleteCategory }
-})
+    return {
+        store,
+        currentCategory,
+        categoryList,
+        filteredCategories,
+        fetchCategories,
+        createCategory,
+        updateCategory,
+        deleteCategory
+    };
+});
