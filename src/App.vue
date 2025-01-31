@@ -1,13 +1,17 @@
 <script setup>
 import TheHeader from "@/components/TheHeader.vue";
-import {useCategoryStore} from "@/stores/useCategoryStore.js";
-import {useBrandStore} from "@/stores/useBrandStore.js";
+import { useCategoryStore } from "@/stores/useCategoryStore.js";
+import { useBrandStore } from "@/stores/useBrandStore.js";
+import { onMounted } from "vue";
 
 const categoryStore = useCategoryStore();
-categoryStore.fetchCategories();
-
 const brandStore = useBrandStore();
-brandStore.fetchBrands();
+
+onMounted(async () => {
+  await categoryStore.fetchCategories();
+  await brandStore.fetchBrands();
+});
+
 </script>
 
 <template>

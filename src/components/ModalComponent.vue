@@ -17,16 +17,7 @@ const emit = defineEmits(["modal-close"]);
         <div class="modal-body">
           <slot name="content"> default content </slot>
         </div>
-<!--        <div class="modal-footer">-->
-<!--          <slot name="footer">-->
-<!--            <button type="button" class="btn btn-primary">Save changes</button>-->
-<!--          </slot>-->
-<!--        </div>-->
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-
-</style>

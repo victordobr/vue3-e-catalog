@@ -1,57 +1,67 @@
 <script setup>
 import { useBrandStore } from "@/stores/useBrandStore.js";
-import * as Yup from "yup";
-import { Form, Field } from 'vee-validate';
-import Alert from "@/components/Alert.vue";
-import { ref } from "vue";
+import { Form, Field, useForm } from 'vee-validate';
+import { watch } from "vue";
+import * as yup from "yup";
 
 const props = defineProps(['brand']);
 const emits = defineEmits(['modal-close']);
 
-const brandStore = useBrandStore();
-
-const error = ref('');
-
-const schema = Yup.object().shape({
-  name: Yup.string().required('Name is required'),
-  description: Yup.string(),
+const { errors, handleSubmit, defineField, resetForm } = useForm({
+  validationSchema: yup.object({
+    name: yup.string().required('Name is required'),
+    description: yup.string(),
+  })
 });
 
-function onSubmit () {
-  error.value = '';
-  if (props.brand._id) {
-    brandStore.updateBrand(props.brand)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  } else {
-    brandStore.createBrand(props.brand)
-      .then((r) => {
-        emits('modal-close');
-      }).catch((e) => {
-        error.value = e.message;
-      });
-  }
-}
+const [name] = defineField('name');
+const [description] = defineField('description');
+
+watch(
+    () => props.brand,
+    (newBrand) => {
+      if (newBrand) {
+        resetForm({ values: newBrand });
+      }
+    },
+    { deep: true }
+);
+
+const onSubmit = handleSubmit(values => {
+  const brandStore = useBrandStore();
+
+  const brandFn = props.brand._id ? brandStore.updateBrand : brandStore.createBrand;
+  brandFn(values);
+  emits('modal-close');
+});
+
 </script>
 
 <template>
-<Alert :message="error" type="danger"></Alert>
-<Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors, isSubmitting }">
+<Form @submit="onSubmit">
   <div class="mb-3">
     <label for="brand-form-title" class="form-label">Name</label>
-    <Field name="name" v-model="brand.name" type="text" class="form-control" id="brand-form-title" placeholder="Brand name" :class="{ 'is-invalid': errors.name }" />
+    <Field name="name"
+           v-model="name"
+           type="text"
+           class="form-control"
+           id="brand-form-title"
+           placeholder="Brand name"
+           :class="{ 'is-invalid': errors.name }"/>
     <div class="invalid-feedback">{{ errors.name }}</div>
   </div>
   <div class="mb-3">
     <label for="brand-form-description" class="form-label">Description</label>
-    <Field as="textarea" name="description" v-model="brand.description" class="form-control" id="brand-form-description" rows="4" :class="{ 'is-invalid': errors.description }" />
+    <Field as="textarea"
+           name="description"
+           v-model="description"
+           class="form-control"
+           id="brand-form-description"
+           rows="4"
+           :class="{ 'is-invalid': errors.description }"/>
     <div class="invalid-feedback">{{ errors.description }}</div>
   </div>
-  <button class="btn btn-success" :disabled="isSubmitting">
-    <span v-show="isSubmitting" class="spinner-border spinner-border-sm mr-1"></span>
+  <button class="btn btn-success" :disabled="!name">
     Save
   </button>
 </Form>

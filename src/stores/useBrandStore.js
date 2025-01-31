@@ -1,25 +1,27 @@
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios';
-import { config } from '@/config.js';
 import { computed } from "@vue/runtime-core";
 
 axios.defaults.headers['content-type'] = 'application/json';
-axios.defaults.headers['x-apikey'] = config.apiKey;
+axios.defaults.headers['x-apikey'] = import.meta.env.VITE_API_KEY;
 
-const BASE_URL = config.baseUrl + 'brands';
+const BASE_URL = import.meta.env.VITE_API_URL + 'brands';
 
 export const useBrandStore = defineStore('brands', () => {
-    const currentBrand = ref('all');
-    const brands = ref([]);
-    const isLoading = ref(false);
-    const message = ref({
-        'value': null,
-        'type': null,
+    const store = reactive({
+        brands: [],
+        isLoading: false,
+        message: {
+            'value': null,
+            'type': null,
+        }
     });
 
+    const currentBrand = ref('all');
+
     const brandList = computed(() => {
-        let cat = brands.value.map((item) => ({
+        let cat = store.brands.map((item) => ({
             'id': item._id,
             'name': item.name
         }));
@@ -30,82 +32,76 @@ export const useBrandStore = defineStore('brands', () => {
         return cat;
     });
 
-    async function fetchBrands () {
-        if (localStorage.brands && localStorage.expiryTime > (new Date()).getTime()) {
-            this.brands = JSON.parse(localStorage.brands)
+    function setMessage(value, type, timeout = import.meta.env.VITE_MESSAGE_TIMEOUT) {
+        store.message = { value, type };
+        if (timeout) {
+            setTimeout(() => {
+                store.message = { value: null, type: null };
+            }, timeout);
+        }
+    }
+
+    async function handleRequest(method, url, data = null) {
+        try {
+            const config = { method, url };
+            if (data !== null) config.data = data; // data = null if we use method delete
+
+            const response = await axios(config);
+            return response.data;
+        } catch (error) {
+            setMessage(error.message, 'danger');
+            console.error(error);
+            throw error;
+        }
+    }
+
+    async function fetchBrands() {
+        if (localStorage.getItem("brands") && Number(localStorage.getItem("expiryTime")) > Date.now()) {
+            store.brands = JSON.parse(localStorage.getItem("brands"));
         } else {
+            localStorage.removeItem("brands");
+            localStorage.removeItem("expiryTime");
+
             try {
-                this.brands = [];
-                this.isLoading = true;
-                const response = await axios.get(BASE_URL + '?sort=_id');
-                if (response.status === 200) {
-                    this.brands = response.data;
-                    // Caching brands using localStorage
-                    localStorage.setItem("brands", JSON.stringify(this.brands));
-                    localStorage.setItem("expiryTime", JSON.stringify((new Date()).getTime() + config.cacheTime));
-                }
-            } catch (error) {
-                this.isLoading = false;
-                this.message = {
-                    'value': error.message,
-                    'type': 'danger',
-                };
+                store.brands = [];
+                store.isLoading = true;
+                const data = await handleRequest('get', BASE_URL + '?sort=_id');
+                store.brands = data;
+                localStorage.setItem("brands", JSON.stringify(data));
+                localStorage.setItem("expiryTime", Date.now() + Number(import.meta.env.VITE_CACHE_TIME));
             } finally {
-                this.isLoading = false;
+                store.isLoading = false;
             }
         }
     }
 
-    async function createBrand (brand) {
-        const response = await axios.post(BASE_URL, JSON.stringify(brand));
-        if (response.status === 201) {
-            this.brands.push(response.data);
-            this.message = {
-                'value': 'The brand has been successfully created!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                this.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, config.messageTimeout);
-        }
+    async function createBrand(brand) {
+        const data = await handleRequest('post', BASE_URL, JSON.stringify(brand));
+        store.brands.push(data);
+        setMessage('The brand has been successfully created!', 'success');
     }
 
-    async function updateBrand (brand) {
-        const response = await axios.put(BASE_URL + "/" + brand._id, JSON.stringify(brand));
-        if (response.status === 200) {
-            this.brands[this.brands.findIndex((item) => item._id === brand._id)] = response.data;
-            this.message = {
-                'value': 'The brand has been successfully updated!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                this.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, config.messageTimeout);
-        }
+    async function updateBrand(brand) {
+        const data = await handleRequest('put', `${BASE_URL}/${brand._id}`, JSON.stringify(brand));
+        const index = store.brands.findIndex(item => item._id === brand._id);
+        if (index !== -1) store.brands[index] = data;
+        setMessage('The brand has been successfully updated!', 'success');
     }
 
-    async function deleteBrand (brandId) {
-        const response = await axios.delete(BASE_URL + "/" + brandId);
-        if (response.status === 200) {
-            this.brands.splice(this.brands.findIndex((item) => item._id === brandId), 1);
-            this.message = {
-                'value': 'The brand has been successfully deleted!',
-                'type': 'success',
-            };
-            setTimeout(() => {
-                this.message = {
-                    'value': null,
-                    'type': null,
-                };
-            }, config.messageTimeout);
-        }
+    async function deleteBrand(brandId) {
+        await handleRequest('delete', `${BASE_URL}/${brandId}`);
+        const index = store.brands.findIndex(item => item._id === brandId);
+        if (index !== -1) store.brands.splice(index, 1);
+        setMessage('The brand has been successfully deleted!', 'success');
     }
 
-    return { currentBrand, brands, brandList, isLoading, message, fetchBrands, createBrand, updateBrand, deleteBrand }
+    return {
+        store,
+        currentBrand,
+        brandList,
+        fetchBrands,
+        createBrand,
+        updateBrand,
+        deleteBrand
+    }
 })

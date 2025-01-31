@@ -7,7 +7,7 @@ import { computed } from "@vue/runtime-core";
 import ModalComponent from "@/components/ModalComponent.vue";
 import { onMounted, reactive, ref } from "vue";
 import { Modal } from "bootstrap";
-import {storeToRefs} from "pinia";
+import { storeToRefs } from "pinia";
 import Alert from "@/components/Alert.vue";
 
 const productStore = useProductStore();
@@ -15,18 +15,13 @@ const categoryStore = useCategoryStore();
 const brandStore = useBrandStore();
 
 productStore.fetchProducts();
-
-const {
-  products,
-  isLoading,
-  message,
-} = storeToRefs(productStore)
+const { store } = storeToRefs(productStore)
 
 const searchValue = ref(null);
 const sortValue = ref(1); // Default value "Price: Low to High"
 
 const productList = computed(() => {
-  let products = productStore.products;
+  let products = productStore.store.products;
   // Sorting products by price
   products = products.sort(
     (a, b) => {
@@ -66,54 +61,53 @@ onMounted(() => {
 })
 
 function openModal(id) {
-  let prod = productStore.products.find((product) => product._id === id);
+  let prod = productStore.store.products.find((product) => product._id === id);
   state.modalHeader = prod.title;
   state.modalContent = prod.description;
   state.modal.show();
 }
 
-function closeModal() {
-  state.modal.hide();
-}
+const closeModal = () => state.modal?.hide();
 
 </script>
 
 <template>
   <div class="d-flex" id="wrapper">
-    <TheSidebar></TheSidebar>
+    <TheSidebar />
     <div id="page-content-wrapper" class="p-3">
-      <Alert :message="message"></Alert>
+      <Alert :message="store.message.value" :type="store.message.type"></Alert>
       <div class="row g-2 mb-3">
         <div class="col-9">
-          <input v-model="searchValue" type="text" class="form-control mr-3" placeholder="Search by product title">
+          <input v-model="searchValue" type="text" class="form-control" placeholder="Search by product title" />
         </div>
         <div class="col-3">
           <select v-model="sortValue" class="form-select">
-            <option value="1">Price: Low to High</option>
-            <option value="2">Price: High to Low</option>
+            <option :value="1">Price: Low to High</option>
+            <option :value="2">Price: High to Low</option>
           </select>
         </div>
       </div>
-      <div v-if="isLoading" class="d-flex justify-content-center">
+      <div v-if="store.isLoading" class="d-flex justify-content-center">
         <div class="spinner-border" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
       <div class="row row-cols-1 row-cols-md-3 g-4">
-        <div class="col" v-for="product in productList">
+        <div v-for="product in productList" :key="product._id" class="col">
           <div class="card h-100">
-            <img :src="product.image" class="card-img-top" :alt="product.title">
+            <img :src="product.image" class="card-img-top" :alt="product.title" />
             <div class="card-body">
-              <h5 class="card-title">{{product.title}}</h5>
+              <h5 class="card-title">{{ product.title }}</h5>
             </div>
             <div class="card-footer">
-              <small class="text-muted">Price: {{product.price}} ₴</small>
-              <button @click="openModal(product._id)" type="button" class="btn btn-outline-primary float-end">Details</button>
+              <small class="text-muted">Price: {{ product.price }} ₴</small>
+              <button @click="openModal(product._id)" class="btn btn-outline-primary float-end">Details</button>
             </div>
           </div>
         </div>
       </div>
     </div>
+
     <ModalComponent id="modal" @modal-close="closeModal">
       <template #header>{{ state.modalHeader }}</template>
       <template #content>{{ state.modalContent }}</template>
